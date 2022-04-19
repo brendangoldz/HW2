@@ -7,27 +7,34 @@ class LogisticalRegression():
     val_log_loss = np.array(0)
 
     TERMINATION_VALUE = 2^-32
-    ITERATIONS = 1000
-    LEARNING_RATE = 0.005
+    ITERATIONS = 2000
+    LEARNING_RATE = 0.001
 
     def linear_mod(self, w, X, b):
         # print(w.shape)
         # print(X.T.shape)
-        return np.dot(X, w.T) + b
+        return np.dot(X, w) + b
     
     def sigmoid(self, wx_b):
         # Probability F(X) for where Y = 1
         return 1/(1 + np.exp(-(wx_b)))
 
-    def weights(self, X, Y, Y_h):
+    def weights(self, X, diff):
         m = X.shape[0]
-        return (1/m) * (X.T @ (Y_h - Y))
+        return (1/m) * (X.T @ (diff))
 
     def compute_weights_bias(self, w, b, tX, tY, vX, vY):
-        P = self.sigmoid(self.linear_mod(w, tX, b))
-        vP = self.sigmoid(self.linear_mod(w, vX, b))
-        weight = self.weights(tX, tY, P)
-        bias = np.mean(np.subtract(P, tY))
+        twxb = self.linear_mod(w, tX, b)
+        vwxb = self.linear_mod(w, vX, b)
+        
+        P = self.sigmoid(twxb)
+        vP = self.sigmoid(vwxb)
+        
+        diffs = np.subtract(P, tY)
+        
+        weight = self.weights(tX, diffs)
+        
+        bias = np.mean(diffs)
         return weight, bias, P, vP
     
     def cost(self, Y, P):
@@ -37,33 +44,24 @@ class LogisticalRegression():
         p3 = 1 - P
         p4 = np.log(p3, where=((p3)>0))
         cost = -(p1+np.multiply(p2, p4))
-        return np.squeeze(cost)
-    
-    def prediction(self, P, thresh=0.5):
-        m = X.shape[0]
-        Y_preds = np.zeros(1, m)
-        for i in range(m):
-            if P[i, 0] > thresh:
-                Y_preds[0, i] = 1
-            else:
-                Y_preds[0, i] = 0
-        return Y_preds
+        return cost
 
     def calculate(self, w, b, tX, tY, vX, vY):
-        t_costs = np.empty((tX.shape[0],1))
-        v_costs = np.empty((vX.shape[0],1))
-        w = w.reshape((1,tX.shape[1]))
+        # t_costs = np.empty((tX.shape[0],1))
+        # v_costs = np.empty((vX.shape[0],1))
+        t_costs = list()
+        v_costs = list()
         b = b
         for i in range(self.ITERATIONS):
             weight, beta, P, vP = self.compute_weights_bias(w, b, tX, tY, vX, vY)
             
             # Loss Calc
-            t_cost = self.cost(tY, P)
-            v_cost = self.cost(vY, vP)
+            t_cost = np.mean(self.cost(tY, P))
+            v_cost = np.mean(self.cost(vY, vP))
             
             # print(t_cost.shape)
-            t_costs = np.append(t_costs, t_cost)
-            v_costs= np.append(v_costs, v_cost)
+            t_costs.append(t_cost)
+            v_costs.append(v_cost)
             
             # Gradient Recalc
             w = w - self.LEARNING_RATE * weight
@@ -78,3 +76,14 @@ class LogisticalRegression():
             "VAL": v_costs
         }
         return w, b, losses
+    
+    def prediction(self, w, b, X, thresh=0.5):
+        m = X.shape[0]
+        P = self.sigmoid(self.linear_mod(w,X,b))
+        Y_preds = np.zeros((1, m))
+        for i in range(m):
+            if P[i] > thresh:
+                Y_preds[:, i] = 1
+            else:
+                Y_preds[:, i] = 0
+        return Y_preds
