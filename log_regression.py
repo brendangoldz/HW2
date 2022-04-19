@@ -25,9 +25,10 @@ class LogisticalRegression():
 
     def compute_weights_bias(self, w, b, tX, tY, vX, vY):
         P = self.sigmoid(self.linear_mod(w, tX, b))
+        vP = self.sigmoid(self.linear_mod(w, vX, b))
         weight = self.weights(tX, tY, P)
         bias = np.mean(np.subtract(P, tY))
-        return weight, bias
+        return weight, bias, P, vP
     
     def cost(self, Y, P):
         logP = np.log(P, where=(P>0))
@@ -38,36 +39,31 @@ class LogisticalRegression():
         cost = -(p1+np.multiply(p2, p4))
         return np.squeeze(cost)
     
-    def prediction(self, w, b, X, thresh=0.5):
-        m = X.size[0]
-        P = self.sigmoid(self.linear_mod(w, tX, b))
+    def prediction(self, P, thresh=0.5):
+        m = X.shape[0]
         Y_preds = np.zeros(1, m)
         for i in range(m):
             if P[i, 0] > thresh:
-                Y_preds[i, 0] = 1
+                Y_preds[0, i] = 1
             else:
-                Y_preds[i, 0] = 0
+                Y_preds[0, i] = 0
         return Y_preds
 
     def calculate(self, w, b, tX, tY, vX, vY):
-        t_costs = list()
-        v_costs = list()
-
+        t_costs = np.empty((tX.shape[0],1))
+        v_costs = np.empty((vX.shape[0],1))
         w = w.reshape((1,tX.shape[1]))
         b = b
         for i in range(self.ITERATIONS):
-            v_wxb = self.linear_mod(w, vX, b)
-            t_wxb = self.linear_mod(w, tX, b)
-            weight, beta = self.compute_weights_bias(w, b, tX, tY, vX, vY)
-            
-            P = self.sigmoid(t_wxb)
-            vP = self.sigmoid(v_wxb)
+            weight, beta, P, vP = self.compute_weights_bias(w, b, tX, tY, vX, vY)
             
             # Loss Calc
             t_cost = self.cost(tY, P)
             v_cost = self.cost(vY, vP)
-            t_costs.append(t_cost)
-            v_costs.append(v_cost)
+            
+            # print(t_cost.shape)
+            t_costs = np.append(t_costs, t_cost)
+            v_costs= np.append(v_costs, v_cost)
             
             # Gradient Recalc
             w = w - self.LEARNING_RATE * weight
@@ -77,7 +73,6 @@ class LogisticalRegression():
                 print("TMean Cost after iteration %i: %f" % (i, np.mean(t_costs)))
                 print("VMean Cost after iteration %i: %f" % (i, np.mean(v_cost)))
             
-
         losses = {
             "TR": t_costs,
             "VAL": v_costs
