@@ -7,7 +7,7 @@ class LogisticalRegression():
     val_log_loss = np.array(0)
 
     TERMINATION_VALUE = 2^-32
-    ITERATIONS = 2000
+    ITERATIONS = 10000
     LEARNING_RATE = 0.001
 
     def linear_mod(self, w, X, b):
