@@ -21,12 +21,17 @@ class DataHandler():
 
     def apply_zscore(self, means, stds, X):
         for i in range(X.shape[1]):
-            X[:,i] = (X[:,i]-means[:, i])/stds[:, i]
+            X[:,i] = np.subtract(X[:,i], means[:, i])/stds[:, i]
         return X
 
     def parse_data_no_header(self):
         return np.genfromtxt(
             self.URL, delimiter=","
+        )
+    
+    def parse_data_multi(self):
+        return np.genfromtxt(
+            self.URL, delimiter=",", dtype="|U19"
         )
 
     def parse_data(self):
@@ -57,7 +62,13 @@ class DataHandler():
 
     def getXY(self, data, xInd, yInd):
         return data[:, :xInd], data[:, yInd:]
-
-    def value_changed(val1, val2):
-        if val1 != val2:
-            print(val1)
+            
+    def filter(self, tX, tY, classifier):
+        tY = np.char.decode(np.array(tY).astype(np.bytes_), 'UTF-8')
+        Y = np.array_like(tY)
+        print(Y)
+        # print(tY)
+        m, n = tX.shape
+        # for i in range(m):
+        #     if tY[i, 0] == classifier:
+        #         Y[i, 0] == 

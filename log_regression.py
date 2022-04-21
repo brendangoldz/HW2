@@ -3,12 +3,13 @@ from data_handler import DataHandler
 
 
 class LogisticalRegression():
-    tr_log_loss = np.array(0)
-    val_log_loss = np.array(0)
-
-    TERMINATION_VALUE = 2^-32
-    ITERATIONS = 10000
-    LEARNING_RATE = 0.001
+    def __init__(self, TERMINATION_VALUE, ITERATIONS, LEARNING_RATE):
+        # self.TERMINATION_VALUE = 2^-32
+        # self.ITERATIONS = 10000
+        # self.LEARNING_RATE = 0.001
+        self.TERMINATION_VALUE = TERMINATION_VALUE
+        self.ITERATIONS = ITERATIONS
+        self.LEARNING_RATE = LEARNING_RATE
 
     def linear_mod(self, w, X, b):
         # print(w.shape)
@@ -29,7 +30,6 @@ class LogisticalRegression():
         
         P = self.sigmoid(twxb)
         vP = self.sigmoid(vwxb)
-        
         diffs = np.subtract(P, tY)
         
         weight = self.weights(tX, diffs)
@@ -59,17 +59,17 @@ class LogisticalRegression():
             t_cost = np.mean(self.cost(tY, P))
             v_cost = np.mean(self.cost(vY, vP))
             
-            # print(t_cost.shape)
+            # Record the costs
             t_costs.append(t_cost)
             v_costs.append(v_cost)
             
             # Gradient Recalc
             w = w - self.LEARNING_RATE * weight
             b = b - self.LEARNING_RATE * beta
-            # Record the costs
-            if i % 100 == 0:
-                print("TMean Cost after iteration %i: %f" % (i, np.mean(t_costs)))
-                print("VMean Cost after iteration %i: %f" % (i, np.mean(v_cost)))
+           
+            # if i % 100 == 0:
+            #     print("TMean Cost after iteration %i: %f" % (i, np.mean(t_costs)))
+            #     print("VMean Cost after iteration %i: %f" % (i, np.mean(v_cost)))
             
         losses = {
             "TR": t_costs,
